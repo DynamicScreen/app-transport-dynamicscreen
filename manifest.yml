@@ -6,7 +6,7 @@ logo: fas fa-bus
 version: 0.6.0
 channel: stable
 api-level: 1
-color: black
+color: gray
 author:
     name: DynamicScreen
     email: bonjour@dynamicscreen.com
@@ -20,7 +20,7 @@ modules:
         logo: fas fa-bus
         description: modules.navitia-driver.description
         identifier: navitia-driver
-        color: black
+        color: gray
         type: auth-provider
         options:
             provider: navitia
@@ -34,7 +34,7 @@ modules:
     -   name: modules.bus-stops.name
         logo: fas fa-bus
         identifier: bus-stops
-        color: black
+        color: gray
         type: slide
         description: modules.bus-stops.description
         options:

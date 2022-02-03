@@ -1,0 +1,50 @@
+# YAML
+id: app-transport-dynamicscreen
+name: app.name
+description: app.description
+logo: fas fa-bus
+version: 0.6.0
+channel: stable
+api-level: 1
+color: black
+author:
+    name: DynamicScreen
+    email: bonjour@dynamicscreen.com
+privileges:
+    needs_account:
+        -   identifier: navitia-driver
+            type: navitia
+            why: privileges.needs_account.navitia.why
+modules:
+    -   name: modules.navitia-driver.name
+        logo: fas fa-bus
+        description: modules.navitia-driver.description
+        identifier: navitia-driver
+        color: black
+        type: auth-provider
+        options:
+            provider: navitia
+            vue:
+                component: src/NavitiaDriver/NavitiaDriver.ts
+            php:
+                handler: \DynamicScreen\Transport\NavitiaDriver\NavitiaAuthProviderHandler
+            node:
+                handler: src/handler.js
+
+    -   name: modules.bus-stops.name
+        logo: fas fa-bus
+        identifier: bus-stops
+        color: black
+        type: slide
+        description: modules.bus-stops.description
+        options:
+            privileges:
+                needs_account:
+                    - navitia-driver
+            vue:
+                component: src/BusStops/BusStops.ts
+                options: src/BusStops/BusStopsOptions.ts
+            php:
+                handler: \DynamicScreen\Transport\BusStops\BusStopsSlideHandler
+            node:
+                handler: src/handler.js

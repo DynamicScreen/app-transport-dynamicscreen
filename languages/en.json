@@ -56,7 +56,7 @@
       "slide": {
       }
     },
-    "navitia-driver": {
+    "navitia_driver": {
       "name": "Navitia",
       "description": "Allow data fetching from Navitia API."
     }

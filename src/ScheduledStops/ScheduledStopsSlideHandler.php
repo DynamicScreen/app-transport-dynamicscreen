@@ -1,11 +1,11 @@
 <?php
 
-namespace DynamicScreen\Today\Today;
+namespace DynamicScreen\Transport\ScheduledStops;
 
 use DynamicScreen\SdkPhp\Handlers\SlideHandler;
 use DynamicScreen\SdkPhp\Interfaces\ISlide;
 
-class BusStopsSlideHandler extends SlideHandler
+class ScheduledStopsSlideHandler extends SlideHandler
 {
 
     public function fetch(ISlide $slide): void

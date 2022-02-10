@@ -3,7 +3,7 @@ import {
   SlideModule, VueInstance,
 } from "dynamicscreen-sdk-js";
 
-export default class NavitiaAuthProviderModule extends SlideModule {
+export default class NavitiaAccountOptions extends SlideModule {
   constructor(context: ISlideContext) {
     super(context);
   }

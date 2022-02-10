@@ -5,7 +5,7 @@ import {
 } from "dynamicscreen-sdk-js"
 import debounce from "debounce";
 
-export default class BusStopsOptionsModule extends SlideOptionsModule {
+export default class ScheduledStopsOptions extends SlideOptionsModule {
   async onReady() {
     return true;
   };

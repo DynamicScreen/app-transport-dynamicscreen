@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Transports Urbain",
-    "description": "Affiche les horaires des prochains passages des transport publics.",
+    "description": "Affiche diverses informations liées aux transports publics.",
     "logo": "fas fa-bus",
     "author": {
       "name": "DynamicScreen",
@@ -16,8 +16,8 @@
     }
   },
   "modules": {
-    "today": {
-      "name": "Today",
+    "scheduled_stops": {
+      "name": "Prochains Arrêts",
       "description": "Affiche les prochains passages de bus.",
       "options": {
         "nb_schedules": {
@@ -27,23 +27,31 @@
         "types": {
           "auto": {
             "label": "Géolocalisé par le Player",
-            "value": "auto",
             "help": "Les coordonnées GPS du player sont utilisés pour récupérer les arrêts à proximité."
           },
           "fixed": {
             "label": "Arrêt pré-défini",
-            "value": "fixed",
             "help": "Vous choisissez l'arrêt et les lignes à afficher."
           }
         },
         "max_stops": {
-          "label": "Nombre maximum d'arrêts à récupérer,",
+          "label": "Nombre maximum d'arrêts à récupérer",
           "help": "N'affiche pas plus que les X arrêts les plus proches du player"
         },
-        "transport_network": "Réseau de transport urbain",
-        "stop_area": "Arrêt",
-        "stops": "Lignes affichées",
-        "add_stop": "Ajouter une ligne"
+        "distance": {
+          "label": "Périmètre de recherche (meters)"
+        },
+        "network": {
+          "label": "Réseau de transport urbain"
+        },
+        "stop_area": {
+          "label": "Arrêt",
+          "placeholder": "Selectionnez un arrêt pour afficher ses lignes"
+        },
+        "stops": {
+          "label": "Lignes affichées",
+          "add_stop": "Ajouter une ligne"
+        }
       },
       "slide": {
       }

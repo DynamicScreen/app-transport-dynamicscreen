@@ -7,6 +7,7 @@ use DynamicScreen\SdkPhp\Handlers\TokenAuthProviderHandler;
 use DynamicScreen\SdkPhp\Interfaces\IModule;
 use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -31,6 +32,30 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
         parent::__construct($module, $config);
     }
 
+    public function getDefaultOptions(): array
+    {
+        return [
+            "api_key" => config("services.{$this->getProviderIdentifier()}.api_key"),
+        ];
+    }
+
+    public function getTokenName(): string
+    {
+        return 'api_key';
+    }
+
+    public function provideData($setting = [])
+    {
+        $region = Arr::get($setting, 'region');
+        $network = Arr::get($setting, 'network');
+        $stop_area = Arr::get($setting, 'stop_area');
+
+        $this->addData('stop_areas', fn () => $this->stop_areas($region, $network));
+        $this->addData('stops', fn () => $this->autocompleteLines($region, $network, $stop_area));
+        $this->addData('networks', fn () => $this->networksByCoverage());
+//        $this->addData('page', fn () => $this->getPage(Arr::get($settings, 'pageId')));
+    }
+
     public function testConnection($request)
     {
         $status = ['success' => true];
@@ -51,7 +76,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
     public function get($uri, Array $options = [])
     {
         $headers = [
-            'headers' => [ 'Authorization' =>  $this->default_config['token'] ]
+            'headers' => [ 'Authorization' =>  $this->default_config[$this->getTokenName()] ]
         ];
         $options = array_merge($headers, $options);
 
@@ -110,7 +135,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function coverages()
     {
-        return collect(\Cache::remember('dynamicscreen.navitia::coveragesList', \Carbon\Carbon::now()->addMonth(), function () {
+        return collect(Cache::remember('dynamicscreen.navitia::coveragesList', Carbon::now()->addMonth(), function () {
             $result = $this->get('coverage', ['timeout' => self::TIMEOUT_DURATION]);
             return collect($result->regions)->reject(function ($region) {
                 return !$region->name;
@@ -120,7 +145,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function coverageAt($lat, $lng)
     {
-        return \Cache::remember('dynamicscreen.navitia::coverages', \Carbon\Carbon::now()->addMonth(), function () use ($lat, $lng) {
+        return Cache::remember('dynamicscreen.navitia::coverages', Carbon::now()->addMonth(), function () use ($lat, $lng) {
             $result = $this->get("coord/{$lng};{$lat}", ['timeout' => self::TIMEOUT_DURATION]);
             return collect($result->regions)->first();
         });
@@ -128,7 +153,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function networks($region)
     {
-        return collect(\Cache::remember('dynamicscreen.navitia::networks:' . $region, \Carbon\Carbon::now()->addWeeks(2), function () use ($region) {
+        return collect(Cache::remember('dynamicscreen.navitia::networks:' . $region, Carbon::now()->addWeeks(2), function () use ($region) {
             $result = $this->get("coverage/{$region}/networks?count=500", ['timeout' => self::TIMEOUT_DURATION]);
             return collect($result->networks)->pluck('name', 'id')->toArray();
         }));
@@ -142,7 +167,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
             $regions = $this->coverages();
         }
 
-        return \Cache::remember('dynamicscreen.navitia::networksByCoverage:' . $this->onlyFr() ? 'fr' : 'all', \Carbon\Carbon::now()->addWeeks(2), function () use ($regions) {
+        return Cache::remember('dynamicscreen.navitia::networksByCoverage:' . $this->onlyFr() ? 'fr' : 'all', Carbon::now()->addWeeks(2), function () use ($regions) {
             return collect($regions)->mapWithKeys(function ($region_name, $region) {
                 return [$region_name => $this->networks($region)->mapWithKeys(function ($value, $key) use ($region) {
                     return [$region . ';' . $key => $value];
@@ -249,7 +274,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function stop_areas($region, $network)
     {
-        return collect(\Cache::remember("dynamicscreen.navitia::stop_areas:{$region}, {$network}", \Carbon\Carbon::now()->addWeek(), function () use ($region, $network) {
+        return collect(Cache::remember("dynamicscreen.navitia::stop_areas:{$region}, {$network}", Carbon::now()->addWeek(), function () use ($region, $network) {
             $stop_areas = collect();
             $start_page = 0;
 
@@ -259,13 +284,16 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
                 $start_page++;
             } while ($result->pagination->total_result > $start_page * $result->pagination->items_per_page);
 
-            return $stop_areas->toArray();
+            return $stop_areas->map(function ($stop_area) {
+                $stop_area->icon = self::physicalModeToIcon(collect($stop_area->physical_modes)->first()->id);
+                return $stop_area;
+            });
         }));
     }
 
     public function routesAtStopArea($region, $network, $stop_area)
     {
-        return collect(\Cache::remember("dynamicscreen.navitia::routesAtStopArea:{$region}, {$network}, {$stop_area}", \Carbon\Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
+        return collect(Cache::remember("dynamicscreen.navitia::routesAtStopArea:{$region}, {$network}, {$stop_area}", Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
             if ($network === null) {
                 $result = $this->get("coverage/{$region}/stop_areas/{$stop_area}/routes?depth=2", ['timeout' => self::TIMEOUT_DURATION]);
             } else {
@@ -277,7 +305,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function route($region, $network, $route)
     {
-        return \Cache::remember("dynamicscreen.navitia::route:{$region}, {$network}, {$route}", \Carbon\Carbon::now()->addWeek(), function () use ($region, $network, $route) {
+        return Cache::remember("dynamicscreen.navitia::route:{$region}, {$network}, {$route}", Carbon::now()->addWeek(), function () use ($region, $network, $route) {
             $result = $this->get("coverage/{$region}/networks/{$network}/routes/{$route}?depth=2", ['timeout' => self::TIMEOUT_DURATION]);
             return collect($result->routes)->first();
         });
@@ -285,7 +313,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function stop_area($region, $network, $stop_area)
     {
-        return \Cache::remember("dynamicscreen.navitia::stop_area:{$region}, {$network}, {$stop_area}", \Carbon\Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
+        return Cache::remember("dynamicscreen.naviti::stop_area:{$region}, {$network}, {$stop_area}", Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
             if (is_array($region)) {
                 $region = $region[1] . ';' . $region[0];
             }
@@ -298,9 +326,9 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
     public function schedulesForRoute($region, $network, $stop_area, $route, $nb_schedules = 5)
     {
         $cacheDurationInMinutes = 60;
-        $now = \Carbon\Carbon::now();
+        $now = Carbon::now();
 
-        $schedules = collect(\Cache::remember("dynamicscreen.navitia::schedulesForRoute:{$region}, {$network}, {$stop_area}, {$route}, {$nb_schedules}", $now->addMinutes($cacheDurationInMinutes), function () use ($cacheDurationInMinutes, $now, $region, $network, $stop_area, $route, $nb_schedules) {
+        $schedules = collect(Cache::remember("dynamicscreen.navitia::schedulesForRoute:{$region}, {$network}, {$stop_area}, {$route}, {$nb_schedules}", $now->addMinutes($cacheDurationInMinutes), function () use ($cacheDurationInMinutes, $now, $region, $network, $stop_area, $route, $nb_schedules) {
             //$nb_items = $nb_schedules * 20;
             $from = $now->toIso8601ZuluString();
             $duration = ($cacheDurationInMinutes + 15) * 60;
@@ -331,12 +359,34 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function stopAreasNearby($lat, $lng, $distance = 500, $max = 20)
     {
-        return collect(\Cache::remember("dynamicscreen.navitia::stopAreasNearby:{$lat}, {$lng}, {$distance}, {$max}", \Carbon\Carbon::now()->addWeeks(2), function () use ($lat, $lng, $distance, $max) {
+        return collect(Cache::remember("dynamicscreen.navitia::stopAreasNearby:{$lat}, {$lng}, {$distance}, {$max}", Carbon::now()->addWeeks(2), function () use ($lat, $lng, $distance, $max) {
             $result = $this->get("coords/{$lng};{$lat}/places_nearby?distance={$distance}&type[]=stop_area&count={$max}", ['timeout' => self::TIMEOUT_DURATION]);
             if(empty($result->places_nearby)){
                 return [];
             }
             return collect($result->places_nearby)->pluck('stop_area.name', 'id')->toArray();
         }));
+    }
+
+    public function autocompleteLines($region, $network, $stop_area)
+    {
+        $lines = $this->routesAtStopArea($region, $network, $stop_area);
+
+        return $lines->keyBy('id')->map(function ($route) {
+            return [
+                'label' => $route->direction->stop_area->name,
+                'line' => [
+                    'id' => $route->line->id,
+                    'code' => $route->line->code,
+                    'name' => $route->line->name,
+                    'color' => $route->line->color,
+                    'text_color' => $route->line->text_color,
+                    'opening_time' => $route->line->opening_time,
+                    'closing_time' => $route->line->closing_time,
+                    'mode' => collect($route->line->physical_modes)->first()->name,
+                    'icon' => self::physicalModeToIcon(collect($route->line->physical_modes)->first()->id)
+                ],
+            ];
+        });
     }
 }

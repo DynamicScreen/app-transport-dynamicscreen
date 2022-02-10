@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Bus Stops",
-    "description": "Display incoming bus stops.",
+    "name": "Urban Transportation",
+    "description": "Display various informations about urban transportation networks.",
     "logo": "fas fa-bus",
     "author": {
       "name": "DynamicScreen",
@@ -16,34 +16,42 @@
     }
   },
   "modules": {
-    "bus-stops": {
-      "name": "Bus stops",
-      "description": "Display next incoming bus stops.",
+    "scheduled_stops": {
+      "name": "Scheduled stops",
+      "description": "Display next scheduled stops",
       "options": {
         "nb_schedules": {
-          "label": "Nombre de prochains passages à afficher",
-          "help": "Affiche pour chaque ligne affichée, les X prochains passages à l'arrêt pour cette ligne."
+          "label": "Amount of next stops to show",
+          "help": "Display for each showed lines, the X next scheduled stops at the stop of this line."
         },
         "types": {
           "auto": {
-            "label": "Géolocalisé par le Player",
-            "value": "auto",
-            "help": "Les coordonnées GPS du player sont utilisés pour récupérer les arrêts à proximité."
+            "label": "Geolocalized by Player",
+            "help": "Player GPS coordinates are used to fetch nearby stops."
           },
           "fixed": {
-            "label": "Arrêt pré-défini",
-            "value": "fixed",
-            "help": "Vous choisissez l'arrêt et les lignes à afficher."
+            "label": "Pre-defined stops",
+            "help": "You choose the stop and lines to show."
           }
         },
         "max_stops": {
-          "label": "Nombre maximum d'arrêts à récupérer,",
-          "help": "N'affiche pas plus que les X arrêts les plus proches du player"
+          "label": "Maximum amount of stops to fetch",
+          "help": "Show the X closest stops to the player.",
         },
-        "transport_network": "Réseau de transport urbain",
-        "stop_area": "Arrêt",
-        "stops": "Lignes affichées",
-        "add_stop": "Ajouter une ligne"
+        "distance": {
+          "label": "Search area (meters)"
+        },
+        "network": {
+          "label": "Urban transportation network"
+        },
+        "stop_area": {
+          "label": "Stop",
+          "placeholder": "Select a stop to show according lines"
+        },
+        "stops": {
+          "label": "Lines to show",
+          "add_stop": "Add a line"
+        }
       },
       "slide": {
       }

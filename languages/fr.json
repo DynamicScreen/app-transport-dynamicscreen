@@ -56,7 +56,7 @@
       "slide": {
       }
     },
-    "navitia-driver": {
+    "navitia_driver": {
       "name": "Navitia",
       "description": "Permet la connexion entre Navitia et DynamicScreen pour afficher les données de transport ubrain en temps réel."
     }

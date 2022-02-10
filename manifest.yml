@@ -16,35 +16,35 @@ privileges:
             type: navitia
             why: privileges.needs_account.navitia.why
 modules:
-    -   name: modules.navitia-driver.name
+    -   name: modules.navitia_driver.name
         logo: fas fa-bus
-        description: modules.navitia-driver.description
+        description: modules.navitia_driver.description
         identifier: navitia-driver
         color: black
         type: auth-provider
         options:
             provider: navitia
             vue:
-                component: src/NavitiaDriver/Navitia.ts
+                component: src/NavitiaDriver/NavitiaAccountOptions.ts
             php:
                 handler: \DynamicScreen\Transport\NavitiaDriver\NavitiaAuthProviderHandler
             node:
                 handler: src/handler.js
 
-    -   name: modules.bus-stops.name
+    -   name: modules.scheduled_stops.name
         logo: fas fa-bus
-        identifier: bus-stops
+        identifier: scheduled-stops
         color: black
         type: slide
-        description: modules.bus-stops.description
+        description: modules.scheduled_stops.description
         options:
             privileges:
                 needs_account:
                     - navitia-driver
             vue:
-                component: src/BusStops/BusStops.ts
-                options: src/BusStops/BusStopsOptions.ts
+                component: src/ScheduledStops/ScheduledStops.ts
+                options: src/ScheduledStops/ScheduledStopsOptions.ts
             php:
-                handler: \DynamicScreen\Transport\BusStops\BusStopsSlideHandler
+                handler: \DynamicScreen\Transport\ScheduledStops\ScheduledStopsSlideHandler
             node:
                 handler: src/handler.js

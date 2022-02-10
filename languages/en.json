@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Urban Transportation",
-    "description": "Display various informations about urban transportation networks.",
+    "name": "Urban Transport",
+    "description": "Display various informations about urban transport networks.",
     "logo": "fas fa-bus",
     "author": {
       "name": "DynamicScreen",
@@ -36,7 +36,7 @@
         },
         "max_stops": {
           "label": "Maximum amount of stops to fetch",
-          "help": "Show the X closest stops to the player.",
+          "help": "Show the X closest stops to the player."
         },
         "distance": {
           "label": "Search area (meters)"

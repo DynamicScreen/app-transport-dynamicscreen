@@ -25,7 +25,7 @@ modules:
         options:
             provider: navitia
             vue:
-                component: src/NavitiaDriver/NavitiaAccountOptions.ts
+                options: src/NavitiaDriver/NavitiaAccountOptions.ts
             php:
                 handler: \DynamicScreen\Transport\NavitiaDriver\NavitiaAuthProviderHandler
             node:

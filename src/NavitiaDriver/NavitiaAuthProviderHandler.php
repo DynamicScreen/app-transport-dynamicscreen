@@ -167,7 +167,7 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
             $regions = $this->coverages();
         }
 
-        return Cache::remember('dynamicscreen.navitia::networksByCoverage:' . $this->onlyFr() ? 'fr' : 'all', Carbon::now()->addWeeks(2), function () use ($regions) {
+        return Cache::remember('dynamicscreen.navitiaw::networksByCoverage:' . $this->onlyFr() ? 'fr' : 'all', Carbon::now()->addWeeks(2), function () use ($regions) {
             return collect($regions)->mapWithKeys(function ($region_name, $region) {
                 return [$region_name => $this->networks($region)->mapWithKeys(function ($value, $key) use ($region) {
                     return [$region . ';' . $key => $value];
@@ -313,13 +313,53 @@ class NavitiaAuthProviderHandler extends TokenAuthProviderHandler
 
     public function stop_area($region, $network, $stop_area)
     {
-        return Cache::remember("dynamicscreen.naviti::stop_area:{$region}, {$network}, {$stop_area}", Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
+        return Cache::remember("dynamicscreen.navitia::stop_area:{$region}, {$network}, {$stop_area}", Carbon::now()->addWeek(), function () use ($region, $network, $stop_area) {
             if (is_array($region)) {
                 $region = $region[1] . ';' . $region[0];
             }
 
             $result = $this->get("coverage/{$region}/networks/{$network}/stop_areas/{$stop_area}?depth=2", ['timeout' => self::TIMEOUT_DURATION]);
+
             return collect($result->stop_areas)->first();
+        });
+    }
+
+    public function schedulesTerminusesForRoute($region, $network, $stop_area, $route, $nb_schedules = 5)
+    {
+        $cacheDurationInMinutes = 60;
+        $now = Carbon::now();
+
+        $terminuses = collect(Cache::remember("dynamicscreen.navitia::schedulesTerminusesForRoute:{$region}, {$network}, {$stop_area}, {$route}, {$nb_schedules}", $now->addMinutes($cacheDurationInMinutes), function () use ($cacheDurationInMinutes, $now, $region, $network, $stop_area, $route, $nb_schedules) {
+            //$nb_items = $nb_schedules * 20;
+            $from = $now->toIso8601ZuluString();
+            $duration = ($cacheDurationInMinutes + 15) * 60;
+
+            if ($network === null) {
+                $result = $this->get("coverage/{$region}/routes/{$route}/stop_areas/{$stop_area}/terminus_schedules?from_datatime={$from}&duration={$duration}&depth=2&data_freshness=realtime&disable_geojson=true&items_per_schedule={$nb_schedules}");
+            } else {
+                $result = $this->get("coverage/{$region}/networks/{$network}/routes/{$route}/stop_areas/{$stop_area}/terminus_schedules?from_datatime={$from}&duration={$duration}&depth=2&data_freshness=realtime&items_per_schedule={$nb_schedules}");
+            }
+
+            $schedules = collect($result->terminus_schedules);
+
+            return $schedules->map(function ($schedule) use ($result) {
+                return collect($schedule->date_times)->map(function ($time) use ($schedule, $result) {
+                    $time->has_terminus = collect($time->links)->contains('category', 'terminus');
+                    if ($time->has_terminus) {
+                        $dest_id = collect($time->links)->where('category', 'terminus')->first()->id;
+                        $time->destination = collect($result->notes)->where('id', $dest_id)->first()->value;
+                    } else {
+                        $time->destination = $schedule->route->direction->stop_area->name;
+                    }
+                    return $time;
+                });
+            });
+        }));
+
+        return $terminuses->map(function ($schedules) use ($nb_schedules) {
+            return collect($schedules)->filter(function ($stop) {
+                return Carbon::parse($stop->date_time)->isFuture();
+            })->take($nb_schedules)->values();
         });
     }
 

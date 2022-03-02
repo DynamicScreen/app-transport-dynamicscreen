@@ -54,11 +54,17 @@
         }
       },
       "slide": {
+        "nearby": "Nearby",
+        "no_schedules": "No schedules planned",
+        "next_schedule_at": "Next schedule at "
       }
     },
     "navitia_driver": {
       "name": "Navitia",
-      "description": "Allow data fetching from Navitia API."
+      "description": "Allow data fetching from Navitia API.",
+      "options": {
+        "api_key": "Secret API key"
+      }
     }
   }
 }

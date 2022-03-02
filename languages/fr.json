@@ -42,7 +42,8 @@
           "label": "Périmètre de recherche (meters)"
         },
         "network": {
-          "label": "Réseau de transport urbain"
+          "label": "Réseau de transport urbain",
+          "placeholder": "Selectionnez un réseau de transport"
         },
         "stop_area": {
           "label": "Arrêt",
@@ -54,11 +55,17 @@
         }
       },
       "slide": {
+        "nearby": "Proche",
+        "no_schedules": "Aucun passage prévu",
+        "next_schedule_at": "Prochain passage à "
       }
     },
     "navitia_driver": {
       "name": "Navitia",
-      "description": "Permet la connexion entre Navitia et DynamicScreen pour afficher les données de transport ubrain en temps réel."
+      "description": "Permet la connexion entre Navitia et DynamicScreen pour afficher les données de transport ubrain en temps réel.",
+      "options": {
+        "api_key": "Clé d'API secrète"
+      }
     }
   }
 }
